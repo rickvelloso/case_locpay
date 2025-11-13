@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './App.css';
 import MetricsDisplay from './components/MetricsDisplay';
 import ThresholdSlider from './components/ThresholdSlider';
@@ -15,6 +15,8 @@ function App() {
   const [showColdStartWarning, setShowColdStartWarning] = useState(true);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [modelVersion, setModelVersion] = useState('v2'); // v1 ou v2
+  const [lossPerFN, setLossPerFN] = useState(5000); // Prejuízo por cliente ruim aprovado
+  const [profitPerFP, setProfitPerFP] = useState(800); // Lucro perdido por cliente bom recusado
   const debounceTimerRef = useRef(null);
 
   const fetchMetrics = useCallback(async (currentThreshold, version) => {
@@ -74,6 +76,19 @@ function App() {
   useEffect(() => {
     fetchMetrics(threshold, modelVersion);
   }, []);
+
+  // Cálculo das métricas financeiras usando useMemo
+  const financialMetrics = useMemo(() => {
+    if (!metrics) return null;
+
+    return {
+      totalLoss: metrics.erro_de_prejuizo_count * lossPerFN,
+      totalOpportunityCost: metrics.erro_de_atrito_count * profitPerFP,
+      prejuizoCount: metrics.erro_de_prejuizo_count,
+      atritoCount: metrics.erro_de_atrito_count,
+      totalSamples: metrics.total_test_samples
+    };
+  }, [metrics, lossPerFN, profitPerFP]);
 
   return (
     <div className="app">
@@ -141,9 +156,49 @@ function App() {
         {loading && <div className="loading-indicator">Calculando...</div>}
       </div>
 
+      <div className="financial-inputs">
+        <h3>💰 Parâmetros Financeiros do Simulador</h3>
+        <p className="financial-subtitle">Ajuste os valores para calcular o impacto financeiro em R$</p>
+        <div className="input-grid">
+          <div className="input-group">
+            <label htmlFor="lossPerFN">
+              <span className="label-icon">🔴</span>
+              Prejuízo Médio por Cliente Ruim (R$)
+            </label>
+            <input
+              id="lossPerFN"
+              type="number"
+              min="0"
+              step="100"
+              value={lossPerFN}
+              onChange={(e) => setLossPerFN(Number(e.target.value))}
+              className="financial-input"
+            />
+            <span className="input-help">Valor médio perdido quando um cliente ruim é aprovado (default + inadimplência)</span>
+          </div>
+          
+          <div className="input-group">
+            <label htmlFor="profitPerFP">
+              <span className="label-icon">🟡</span>
+              Lucro Médio por Cliente Bom (R$)
+            </label>
+            <input
+              id="profitPerFP"
+              type="number"
+              min="0"
+              step="50"
+              value={profitPerFP}
+              onChange={(e) => setProfitPerFP(Number(e.target.value))}
+              className="financial-input"
+            />
+            <span className="input-help">Valor médio de lucro perdido quando um cliente bom é recusado</span>
+          </div>
+        </div>
+      </div>
+
       {error && <div className="error-message">{error}</div>}
 
-      <MetricsDisplay metrics={metrics} />
+      <MetricsDisplay financials={financialMetrics} />
     </div>
   );
 }
