@@ -67,6 +67,19 @@ class ThresholdEvaluationResponse(BaseModel):
     metricas_de_negocio: BusinessMetrics
     classification_report: Dict
 
+class ThresholdPoint(BaseModel):
+    threshold: float
+    fn_count: int
+    fp_count: int
+    total_cost: float
+
+class OptimizationResponse(BaseModel):
+    optimal_threshold: float
+    min_total_cost: float
+    fn_at_optimal: int
+    fp_at_optimal: int
+    all_points: list[ThresholdPoint]
+
 @app.on_event("startup")
 async def startup_event():
     """Carrega todos os modelos (V1 e V2) e seus dados de teste."""
@@ -288,3 +301,88 @@ async def evaluate_threshold(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro durante a avaliação: {str(e)}")
+
+@app.get("/optimize", response_model=OptimizationResponse, tags=["Scoring (3. Otimizador)"])
+async def optimize_threshold(
+    loss_per_fn: float = Query(default=5000, ge=0, description="Prejuízo médio por cliente ruim aprovado (R$)"),
+    profit_per_fp: float = Query(default=800, ge=0, description="Lucro médio perdido por cliente bom recusado (R$)"),
+    model_version: str = Query(default="v2", description="Versão do modelo: 'v1' ou 'v2'")
+):
+    """
+    **Otimizador de Threshold** - Calcula o threshold ótimo que minimiza o custo total de erro.
+    
+    Testa 100 valores de threshold (0.01 a 1.00) e retorna:
+    - O threshold que minimiza: (FN × loss_per_fn) + (FP × profit_per_fp)
+    - Todos os pontos testados para visualização no frontend
+    
+    Parâmetros de negócio:
+    - **loss_per_fn**: Prejuízo médio quando um cliente ruim é aprovado (default: R$ 5.000)
+    - **profit_per_fp**: Lucro perdido quando um cliente bom é recusado (default: R$ 800)
+    - **model_version**: 'v1' (base) ou 'v2' (enriquecido)
+    """
+    # Validar versão do modelo
+    if model_version not in models:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Versão '{model_version}' inválida. Use 'v1' ou 'v2'."
+        )
+    
+    # Obter modelo e dados de teste
+    model = models.get(model_version)
+    X_test, y_test = test_data.get(model_version, (None, None))
+    
+    if model is None or X_test is None or y_test is None:
+        raise HTTPException(
+            status_code=503, 
+            detail=f"Modelo {model_version} não carregado. Verifique os logs do servidor."
+        )
+    
+    try:
+        # Calcular probabilidades uma vez
+        probabilities = model.predict_proba(X_test)[:, 1]
+        
+        # Testar 100 thresholds de 0.01 a 1.00
+        thresholds = np.linspace(0.01, 1.00, 100)
+        results = []
+        
+        min_cost = float('inf')
+        optimal_threshold = 0.5
+        optimal_fn = 0
+        optimal_fp = 0
+        
+        for threshold in thresholds:
+            # Predições com este threshold
+            y_pred = np.where(probabilities > threshold, 1, 0)
+            
+            # Matriz de confusão
+            cm = confusion_matrix(y_test, y_pred)
+            tn, fp, fn, tp = cm.ravel()
+            
+            # Custo total
+            total_cost = (fn * loss_per_fn) + (fp * profit_per_fp)
+            
+            # Armazenar ponto
+            results.append(ThresholdPoint(
+                threshold=float(threshold),
+                fn_count=int(fn),
+                fp_count=int(fp),
+                total_cost=float(total_cost)
+            ))
+            
+            # Atualizar ótimo se encontrou custo menor
+            if total_cost < min_cost:
+                min_cost = total_cost
+                optimal_threshold = float(threshold)
+                optimal_fn = int(fn)
+                optimal_fp = int(fp)
+        
+        return OptimizationResponse(
+            optimal_threshold=optimal_threshold,
+            min_total_cost=float(min_cost),
+            fn_at_optimal=optimal_fn,
+            fp_at_optimal=optimal_fp,
+            all_points=results
+        )
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro durante otimização: {str(e)}")
