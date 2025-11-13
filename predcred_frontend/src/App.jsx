@@ -20,12 +20,25 @@ function App() {
 
     try {
       const response = await axios.get(`${API_URL}/evaluate_threshold`, {
-        params: { threshold: currentThreshold }
+        params: { threshold: currentThreshold },
+        
+        // <<< ADICIONE ESTA LINHA DE VOLTA ---
+        // Dá 90 segundos para a API "acordar" do cold start
+        timeout: 90000 
+        
       });
       setMetrics(response.data.metricas_de_negocio);
+
     } catch (err) {
       console.error("Erro ao buscar dados da API:", err);
-      setError('Falha ao conectar na API. O servidor backend está rodando?');
+
+      // <<< (Opcional) Melhore a mensagem de erro ---
+      if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+        setError('O servidor demorou muito para responder (cold start). Por favor, atualize a página em 30 segundos.');
+      } else {
+        setError('Falha ao conectar na API. O servidor backend está rodando?');
+      }
+
     } finally {
       setLoading(false);
     }
