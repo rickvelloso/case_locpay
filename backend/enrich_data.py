@@ -5,9 +5,11 @@ Script de Enriquecimento de Dados com Simulação de Bureau de Crédito
 Este script enriquece os dados base de crédito com scores simulados de bureau,
 criando dados mais realistas para treinar o Modelo V2.
 
-Lógica de Simulação:
-- Clientes inadimplentes (Default=1): Score entre 300-600 (baixo)
-- Clientes adimplentes (Default=0): Score entre 650-950 (alto)
+Lógica de Simulação com Ruído Realista:
+- Clientes inadimplentes (Default=1): Distribuição normal centrada em 450 (σ=100)
+- Clientes adimplentes (Default=0): Distribuição normal centrada em 750 (σ=100)
+- Sobreposição intencional entre distribuições para simular cenário real
+- ~15-20% de sobreposição para manter trade-offs no threshold simulator
 """
 
 import pandas as pd
@@ -20,20 +22,30 @@ OUTPUT_PATH = 'data/Loan_default_ENRICHED.csv'
 
 def generate_bureau_score(default_status):
     """
-    Gera um score de bureau simulado baseado no status de inadimplência.
+    Gera um score de bureau simulado com ruído realista baseado no status de inadimplência.
+    
+    Usa distribuições normais com sobreposição para simular imperfeições do mundo real,
+    onde nem todos os inadimplentes têm scores baixos e nem todos os adimplentes têm scores altos.
     
     Args:
         default_status (int): 1 para inadimplente, 0 para adimplente
         
     Returns:
-        int: Score de bureau simulado
+        int: Score de bureau simulado entre 300 e 950
     """
     if default_status == 1:
-        # Cliente inadimplente: score baixo (300-600)
-        return np.random.randint(300, 600)
+        # Cliente inadimplente: distribuição normal centrada em 450
+        # Permite alguns inadimplentes com scores médios/altos (ruído realista)
+        score = np.random.normal(loc=450, scale=100)
     else:
-        # Cliente adimplente: score alto (650-950)
-        return np.random.randint(650, 950)
+        # Cliente adimplente: distribuição normal centrada em 750
+        # Permite alguns adimplentes com scores médios/baixos (ruído realista)
+        score = np.random.normal(loc=750, scale=100)
+    
+    # Limita o score entre 300 e 950 (bounds do bureau de crédito)
+    score = np.clip(score, 300, 950)
+    
+    return int(score)
 
 
 def main():
