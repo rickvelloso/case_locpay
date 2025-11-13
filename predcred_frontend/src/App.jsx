@@ -4,8 +4,8 @@ import './App.css';
 import MetricsDisplay from './components/MetricsDisplay';
 import ThresholdSlider from './components/ThresholdSlider';
 // Local hosted backend para testes internos
-// const API_URL = 'http://127.0.0.1:8000';
-const API_URL = 'https://predcred-api.onrender.com'; 
+const API_URL = 'http://127.0.0.1:8000';
+//const API_URL = 'https://predcred-api.onrender.com'; 
 
 function App() {
   const [threshold, setThreshold] = useState(0.5);
@@ -14,17 +14,20 @@ function App() {
   const [error, setError] = useState('');
   const [showColdStartWarning, setShowColdStartWarning] = useState(true);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
+  const [modelVersion, setModelVersion] = useState('v2'); // v1 ou v2
   const debounceTimerRef = useRef(null);
 
-  const fetchMetrics = useCallback(async (currentThreshold) => {
+  const fetchMetrics = useCallback(async (currentThreshold, version) => {
     setLoading(true);
     setError('');
 
     try {
       const response = await axios.get(`${API_URL}/evaluate_threshold`, {
-        params: { threshold: currentThreshold },
+        params: { 
+          threshold: currentThreshold,
+          model_version: version || modelVersion
+        },
         timeout: 90000 
-        
       });
       setMetrics(response.data.metricas_de_negocio);
       
@@ -46,7 +49,7 @@ function App() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [modelVersion]);
 
   const handleSliderChange = useCallback((value) => {
     setThreshold(value);
@@ -58,20 +61,25 @@ function App() {
     
     // Cria um novo timer para chamar a API após 500ms
     debounceTimerRef.current = setTimeout(() => {
-      fetchMetrics(value);
+      fetchMetrics(value, modelVersion);
     }, 500);
-  }, [fetchMetrics]);
+  }, [fetchMetrics, modelVersion]);
+
+  const handleModelChange = (version) => {
+    setModelVersion(version);
+    fetchMetrics(threshold, version);
+  };
 
   // Carrega os dados iniciais ao montar o componente
   useEffect(() => {
-    fetchMetrics(threshold);
+    fetchMetrics(threshold, modelVersion);
   }, []);
 
   return (
     <div className="app">
       <header className="app-header">
-        <h1>Dashboard de Simulação de Risco (PredCred)</h1>
-        <p>Ajuste o slider para ver o impacto do ponto de corte em tempo real.</p>
+        <h1>Dashboard de Comparação A/B (PredCred)</h1>
+        <p>Compare o desempenho dos modelos V1 (base) e V2 (enriquecido) em tempo real.</p>
         <a 
           href="https://github.com/rickvelloso/pred_cred" 
           target="_blank" 
@@ -105,6 +113,28 @@ function App() {
           </div>
         </div>
       )}
+      
+      <div className="model-selector">
+        <h3>Selecione o Modelo</h3>
+        <div className="model-buttons">
+          <button 
+            className={`model-button ${modelVersion === 'v1' ? 'active' : ''}`}
+            onClick={() => handleModelChange('v1')}
+          >
+            <div className="model-badge">V1</div>
+            <div className="model-name">Modelo Base</div>
+            <div className="model-description">Features básicas</div>
+          </button>
+          <button 
+            className={`model-button ${modelVersion === 'v2' ? 'active' : ''}`}
+            onClick={() => handleModelChange('v2')}
+          >
+            <div className="model-badge">V2</div>
+            <div className="model-name">Modelo Enriquecido</div>
+            <div className="model-description">Features + Bureau Score</div>
+          </button>
+        </div>
+      </div>
       
       <div className="simulator-controls">
         <ThresholdSlider value={threshold} onChange={handleSliderChange} />
