@@ -1,16 +1,87 @@
-# React + Vite
+# LocPay Frontend - Risk Simulation Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Dashboard interativo para simulação de risco de crédito, permitindo ajustar o threshold (ponto de corte) e visualizar o impacto nos erros de prejuízo e atrito.
 
-Currently, two official plugins are available:
+## 📋 Pré-requisitos
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Node.js (versão 16 ou superior)
+- npm ou yarn
+- Backend da API rodando em `http://127.0.0.1:8000`
 
-## React Compiler
+## 🚀 Como executar
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 1. Instalar as dependências
 
-## Expanding the ESLint configuration
+```bash
+npm install
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 2. Iniciar o servidor de desenvolvimento
+
+```bash
+npm run dev
+```
+
+O frontend estará disponível em `http://localhost:5173`
+
+### 3. Build para produção (opcional)
+
+```bash
+npm run build
+```
+
+Os arquivos otimizados estarão na pasta `dist/`
+
+### 4. Preview do build de produção (opcional)
+
+```bash
+npm run preview
+```
+
+## 🛠️ Tecnologias utilizadas
+
+- **React 19** - Biblioteca JavaScript para construção de interfaces
+- **Vite** - Ferramenta de build rápida e moderna
+- **Axios** - Cliente HTTP para comunicação com a API
+- **rc-slider** - Componente de slider interativo e customizável
+- **CSS3** - Estilização com animações e responsividade
+
+## 📁 Estrutura do projeto
+
+```
+locpay_frontend/
+├── src/
+│   ├── components/
+│   │   ├── ThresholdSlider.jsx    # Componente do slider de threshold
+│   │   ├── ThresholdSlider.css
+│   │   ├── MetricsDisplay.jsx     # Componente de exibição de métricas
+│   │   └── MetricsDisplay.css
+│   ├── App.jsx                    # Componente principal
+│   ├── App.css
+│   ├── main.jsx                   # Ponto de entrada
+│   └── index.css                  # Estilos globais
+├── public/                        # Arquivos estáticos
+├── package.json
+└── vite.config.js
+```
+
+## 🎯 Funcionalidades
+
+- ✨ Slider interativo para ajuste de threshold (0.1 a 0.9)
+- 📊 Visualização em tempo real de métricas de erro
+- 📱 Design responsivo (mobile, tablet e desktop)
+- 🎨 Animações suaves e feedback visual
+- ⚡ Performance otimizada com React.memo e useCallback
+
+## 🔗 Integração com Backend
+
+O frontend se conecta automaticamente com a API em `http://127.0.0.1:8000/evaluate_threshold`
+
+Certifique-se de que o backend esteja rodando antes de usar o dashboard.
+
+## 📝 Scripts disponíveis
+
+- `npm run dev` - Inicia o servidor de desenvolvimento
+- `npm run build` - Cria build de produção
+- `npm run preview` - Preview do build de produção
+- `npm run lint` - Executa o linter ESLint
