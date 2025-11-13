@@ -25,6 +25,32 @@
   margin: 0;
 }
 
+.github-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.6rem 1.2rem;
+  background-color: #333;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  border: 1px solid #555;
+}
+
+.github-link:hover {
+  background-color: #444;
+  border-color: #61DAFB;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(97, 218, 251, 0.2);
+}
+
+.github-link svg {
+  flex-shrink: 0;
+}
+
 .simulator-controls {
   background-color: #2f2f2f;
   padding: 1.5rem;
