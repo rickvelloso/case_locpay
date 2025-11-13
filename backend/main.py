@@ -9,7 +9,7 @@ from sklearn.metrics import confusion_matrix, classification_report
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
-    title="API Preditiva de Risco Imobiliário (LocPay)",
+    title="API Preditiva de Risco Imobiliário (PredCred)",
     description="Microserviço de IA para simular a análise de risco de inadimplência de inquilinos.",
     version="0.2.0"
 )

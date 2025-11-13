@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import './App.css';
 import MetricsDisplay from './components/MetricsDisplay';
 import ThresholdSlider from './components/ThresholdSlider';
@@ -11,11 +11,11 @@ function App() {
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const debounceTimerRef = useRef(null);
 
   const fetchMetrics = useCallback(async (currentThreshold) => {
     setLoading(true);
     setError('');
-    setMetrics(null);
 
     try {
       const response = await axios.get(`${API_URL}/evaluate_threshold`, {
@@ -30,30 +30,35 @@ function App() {
     }
   }, []);
 
-  const handleSimulateClick = () => {
-    fetchMetrics(threshold);
-  };
-
   const handleSliderChange = useCallback((value) => {
     setThreshold(value);
+    
+    // Cancela o timer anterior se existir
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
+    // Cria um novo timer para chamar a API após 500ms
+    debounceTimerRef.current = setTimeout(() => {
+      fetchMetrics(value);
+    }, 500);
+  }, [fetchMetrics]);
+
+  // Carrega os dados iniciais ao montar o componente
+  useEffect(() => {
+    fetchMetrics(threshold);
   }, []);
 
   return (
     <div className="app">
       <header className="app-header">
-        <h1>Dashboard de Simulação de Risco (LocPay)</h1>
-        <p>Use o slider para definir o "ponto de corte" (threshold) de risco e veja o impacto financeiro.</p>
+        <h1>Dashboard de Simulação de Risco (PredCred)</h1>
+        <p>Ajuste o slider para ver o impacto do ponto de corte em tempo real.</p>
       </header>
       
       <div className="simulator-controls">
         <ThresholdSlider value={threshold} onChange={handleSliderChange} />
-        <button 
-          className="simulate-button" 
-          onClick={handleSimulateClick} 
-          disabled={loading}
-        >
-          {loading ? 'Simulando...' : 'Simular Impacto'}
-        </button>
+        {loading && <div className="loading-indicator">Calculando...</div>}
       </div>
 
       {error && <div className="error-message">{error}</div>}

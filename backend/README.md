@@ -1,4 +1,4 @@
-# LocPay - API Preditiva de Risco Imobiliário
+# PredCred - API Preditiva de Risco Imobiliário
 
 **Versão:** 0.2.0
 
@@ -39,7 +39,7 @@ Siga os passos abaixo para configurar e executar o projeto em seu ambiente local
 
 ```bash
 git clone <URL_DO_SEU_REPOSITORIO>
-cd locpay_risk_api
+cd backend
 ```
 
 ### 3. Crie e Ative um Ambiente Virtual

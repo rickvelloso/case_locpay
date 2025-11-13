@@ -1,4 +1,4 @@
-# LocPay Frontend - Risk Simulation Dashboard
+# PredCred Frontend - Risk Simulation Dashboard
 
 Dashboard interativo para simulação de risco de crédito, permitindo ajustar o threshold (ponto de corte) e visualizar o impacto nos erros de prejuízo e atrito.
 
@@ -49,7 +49,7 @@ npm run preview
 ## 📁 Estrutura do projeto
 
 ```
-locpay_frontend/
+predcred_frontend/
 ├── src/
 │   ├── components/
 │   │   ├── ThresholdSlider.jsx    # Componente do slider de threshold

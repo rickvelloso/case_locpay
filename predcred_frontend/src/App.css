@@ -31,39 +31,26 @@
   border-radius: 12px;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
   align-items: center;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-.simulate-button {
-  padding: 0.8rem 2rem;
-  font-size: 1rem;
-  font-weight: bold;
-  color: #fff;
-  background-color: #61DAFB;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(97, 218, 251, 0.3);
+.loading-indicator {
+  color: #61DAFB;
+  font-size: 0.9rem;
+  font-style: italic;
+  opacity: 0.8;
+  animation: pulse 1.5s ease-in-out infinite;
 }
 
-.simulate-button:hover {
-  background-color: #4ca8c3;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(97, 218, 251, 0.4);
-}
-
-.simulate-button:active {
-  transform: translateY(0);
-}
-
-.simulate-button:disabled {
-  background-color: #555;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 .error-message {
