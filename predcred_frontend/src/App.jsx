@@ -4,8 +4,8 @@ import './App.css';
 import MetricsDisplay from './components/MetricsDisplay';
 import ThresholdSlider from './components/ThresholdSlider';
 // Local hosted backend para testes internos
-const API_URL = 'http://127.0.0.1:8000';
-//const API_URL = 'https://predcred-api.onrender.com'; 
+//const API_URL = 'http://127.0.0.1:8000';
+const API_URL = 'https://predcred-api.onrender.com'; 
 
 function App() {
   const [threshold, setThreshold] = useState(0.5);
