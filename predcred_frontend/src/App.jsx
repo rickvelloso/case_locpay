@@ -1,37 +1,39 @@
 import axios from 'axios';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import './App.css';
+import CostChart from './components/CostChart';
 import MetricsDisplay from './components/MetricsDisplay';
-import ThresholdSlider from './components/ThresholdSlider';
+import OptimizationSummary from './components/OptimizationSummary';
+
 // Local hosted backend para testes internos
 //const API_URL = 'http://127.0.0.1:8000';
 const API_URL = 'https://predcred-api.onrender.com'; 
 
 function App() {
-  const [threshold, setThreshold] = useState(0.5);
-  const [metrics, setMetrics] = useState(null);
+  const [optimization, setOptimization] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showColdStartWarning, setShowColdStartWarning] = useState(true);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [modelVersion, setModelVersion] = useState('v2'); // v1 ou v2
-  const [lossPerFN, setLossPerFN] = useState(5000); // Prejuízo por cliente ruim aprovado
-  const [profitPerFP, setProfitPerFP] = useState(800); // Lucro perdido por cliente bom recusado
-  const debounceTimerRef = useRef(null);
+  const [lossPerFN, setLossPerFN] = useState(5000);
+  const [profitPerFP, setProfitPerFP] = useState(800);
 
-  const fetchMetrics = useCallback(async (currentThreshold, version) => {
+  const fetchOptimization = useCallback(async (version, lossFn, profitFp) => {
     setLoading(true);
     setError('');
 
     try {
-      const response = await axios.get(`${API_URL}/evaluate_threshold`, {
+      const response = await axios.get(`${API_URL}/optimize`, {
         params: { 
-          threshold: currentThreshold,
-          model_version: version || modelVersion
+          model_version: version,
+          loss_per_fn: lossFn,
+          profit_per_fp: profitFp
         },
         timeout: 90000 
       });
-      setMetrics(response.data.metricas_de_negocio);
+      
+      setOptimization(response.data);
       
       // Remove o aviso após o primeiro carregamento bem-sucedido
       if (isFirstLoad) {
@@ -40,7 +42,7 @@ function App() {
       }
 
     } catch (err) {
-      console.error("Erro ao buscar dados da API:", err);
+      console.error("Erro ao buscar otimização:", err);
 
       if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
         setError('O servidor demorou muito para responder (cold start). Por favor, atualize a página em 30 segundos.');
@@ -51,44 +53,41 @@ function App() {
     } finally {
       setLoading(false);
     }
-  }, [modelVersion]);
-
-  const handleSliderChange = useCallback((value) => {
-    setThreshold(value);
-    
-    // Cancela o timer anterior se existir
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-    
-    // Cria um novo timer para chamar a API após 500ms
-    debounceTimerRef.current = setTimeout(() => {
-      fetchMetrics(value, modelVersion);
-    }, 500);
-  }, [fetchMetrics, modelVersion]);
+  }, [isFirstLoad]);
 
   const handleModelChange = (version) => {
     setModelVersion(version);
-    fetchMetrics(threshold, version);
+    fetchOptimization(version, lossPerFN, profitPerFP);
   };
+
+  const handleFinancialChange = useCallback(() => {
+    fetchOptimization(modelVersion, lossPerFN, profitPerFP);
+  }, [modelVersion, lossPerFN, profitPerFP, fetchOptimization]);
 
   // Carrega os dados iniciais ao montar o componente
   useEffect(() => {
-    fetchMetrics(threshold, modelVersion);
+    fetchOptimization(modelVersion, lossPerFN, profitPerFP);
   }, []);
 
-  // Cálculo das métricas financeiras usando useMemo
+  // Cálculo das métricas financeiras no threshold ótimo
   const financialMetrics = useMemo(() => {
-    if (!metrics) return null;
+    if (!optimization) return null;
+
+    const totalLoss = optimization.fn_at_optimal * lossPerFN;
+    const totalOpportunityCost = optimization.fp_at_optimal * profitPerFP;
+    const totalErrorCost = totalLoss + totalOpportunityCost;
 
     return {
-      totalLoss: metrics.erro_de_prejuizo_count * lossPerFN,
-      totalOpportunityCost: metrics.erro_de_atrito_count * profitPerFP,
-      prejuizoCount: metrics.erro_de_prejuizo_count,
-      atritoCount: metrics.erro_de_atrito_count,
-      totalSamples: metrics.total_test_samples
+      totalLoss,
+      totalOpportunityCost,
+      totalErrorCost,
+      prejuizoCount: optimization.fn_at_optimal,
+      atritoCount: optimization.fp_at_optimal,
+      totalSamples: optimization.all_points && optimization.all_points.length > 0 
+        ? optimization.all_points[0].fn_count + optimization.all_points[0].fp_count 
+        : 76605
     };
-  }, [metrics, lossPerFN, profitPerFP]);
+  }, [optimization, lossPerFN, profitPerFP]);
 
   return (
     <div className="app">
@@ -135,6 +134,7 @@ function App() {
           <button 
             className={`model-button ${modelVersion === 'v1' ? 'active' : ''}`}
             onClick={() => handleModelChange('v1')}
+            disabled={loading}
           >
             <div className="model-badge">V1</div>
             <div className="model-name">Modelo Base</div>
@@ -143,6 +143,7 @@ function App() {
           <button 
             className={`model-button ${modelVersion === 'v2' ? 'active' : ''}`}
             onClick={() => handleModelChange('v2')}
+            disabled={loading}
           >
             <div className="model-badge">V2</div>
             <div className="model-name">Modelo Enriquecido</div>
@@ -151,14 +152,9 @@ function App() {
         </div>
       </div>
       
-      <div className="simulator-controls">
-        <ThresholdSlider value={threshold} onChange={handleSliderChange} />
-        {loading && <div className="loading-indicator">Calculando...</div>}
-      </div>
-
       <div className="financial-inputs">
-        <h3>💰 Parâmetros Financeiros do Simulador</h3>
-        <p className="financial-subtitle">Ajuste os valores para calcular o impacto financeiro em R$</p>
+        <h3>💰 Parâmetros Financeiros do Otimizador</h3>
+        <p className="financial-subtitle">Ajuste os valores para recalcular o threshold ótimo</p>
         <div className="input-grid">
           <div className="input-group">
             <label htmlFor="lossPerFN">
@@ -172,7 +168,9 @@ function App() {
               step="100"
               value={lossPerFN}
               onChange={(e) => setLossPerFN(Number(e.target.value))}
+              onBlur={handleFinancialChange}
               className="financial-input"
+              disabled={loading}
             />
             <span className="input-help">Valor médio perdido quando um cliente ruim é aprovado (default + inadimplência)</span>
           </div>
@@ -189,16 +187,34 @@ function App() {
               step="50"
               value={profitPerFP}
               onChange={(e) => setProfitPerFP(Number(e.target.value))}
+              onBlur={handleFinancialChange}
               className="financial-input"
+              disabled={loading}
             />
             <span className="input-help">Valor médio de lucro perdido quando um cliente bom é recusado</span>
           </div>
         </div>
+        <div className="recalculate-section">
+          <button 
+            className="recalculate-button" 
+            onClick={handleFinancialChange}
+            disabled={loading}
+          >
+            {loading ? '⏳ Otimizando...' : '🔄 Recalcular Otimização'}
+          </button>
+        </div>
       </div>
 
+      {loading && <div className="loading-indicator">Calculando threshold ótimo com 100 simulações...</div>}
       {error && <div className="error-message">{error}</div>}
 
-      <MetricsDisplay financials={financialMetrics} />
+      {optimization && (
+        <>
+          <OptimizationSummary optimization={optimization} />
+          <CostChart data={optimization.all_points} optimalThreshold={optimization.optimal_threshold} />
+          <MetricsDisplay financials={financialMetrics} />
+        </>
+      )}
     </div>
   );
 }

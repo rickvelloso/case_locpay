@@ -19,7 +19,7 @@ const MetricsDisplay = memo(({ financials }) => {
   return (
     <div className="metrics-display">
       <h2 className="metrics-title">
-        💵 Impacto Financeiro (com {financials.totalSamples.toLocaleString('pt-BR')} clientes)
+        💵 Impacto Financeiro no Threshold Ótimo
       </h2>
       
       <div className="metrics-grid">
@@ -55,6 +55,20 @@ const MetricsDisplay = memo(({ financials }) => {
             </span>
           </div>
           <span className="metric-description">Perda de Receita (Custo de Oportunidade)</span>
+        </div>
+
+        <div className="metric-card total-cost">
+          <h3>💰 Custo Total do Erro</h3>
+          <p>Soma dos dois tipos de erro</p>
+          <div className="metric-value financial total">
+            {formatCurrency(financials.totalErrorCost)}
+          </div>
+          <div className="metric-details">
+            <span className="formula-badge">
+              FN × Prejuízo + FP × Lucro Perdido
+            </span>
+          </div>
+          <span className="metric-description">Custo Total Minimizado no Threshold Ótimo</span>
         </div>
       </div>
     </div>
