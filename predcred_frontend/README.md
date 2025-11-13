@@ -1,6 +1,10 @@
-# PredCred Frontend - Risk Simulation Dashboard
+# PredCred Frontend - Dashboard de Comparação A/B
 
-Dashboard interativo para simulação de risco de crédito, permitindo ajustar o threshold (ponto de corte) e visualizar o impacto nos erros de prejuízo e atrito.
+Dashboard interativo para comparação de modelos de risco de crédito (V1 vs V2), permitindo:
+- Alternar entre modelo base (V1) e modelo enriquecido (V2) em tempo real
+- Ajustar o threshold (ponto de corte) e visualizar o impacto
+- Comparar erros de prejuízo e atrito entre os modelos
+- Demonstrar o valor do enriquecimento de dados
 
 ## 📋 Pré-requisitos
 
@@ -67,15 +71,35 @@ predcred_frontend/
 
 ## 🎯 Funcionalidades
 
-- ✨ Slider interativo para ajuste de threshold (0.1 a 0.9)
-- 📊 Visualização em tempo real de métricas de erro
-- 📱 Design responsivo (mobile, tablet e desktop)
-- 🎨 Animações suaves e feedback visual
-- ⚡ Performance otimizada com React.memo e useCallback
+- ✨ **Seletor de Modelo**: Toggle entre V1 (Base) e V2 (Enriquecido)
+- 📊 **Comparação A/B**: Visualize as diferenças de performance em tempo real
+- 🎚️ **Slider de Threshold**: Ajuste de 0.1 a 0.9 para otimizar trade-offs
+- 📉 **Métricas em Tempo Real**: Erros de prejuízo (FN) e atrito (FP) atualizados instantaneamente
+- ⚠️ **Banner de Cold Start**: Aviso sobre delay inicial do Render (free tier)
+- 🔗 **Link do GitHub**: Acesso direto ao repositório do projeto
+- 📱 **Design Responsivo**: Interface adaptada para mobile, tablet e desktop
+- 🎨 **Animações Suaves**: Feedback visual e transições polidas
+- ⚡ **Performance Otimizada**: React.memo e useCallback para renderizações eficientes
+
+## 📊 Comparação de Modelos
+
+### Modelo V1 (Base)
+- 16 features (sem dados externos)
+- Recall: ~69%
+- FN: 2.761 | FP: 21.374
+
+### Modelo V2 (Enriquecido)
+- 17 features (+ score_bureau)
+- Recall: ~93% (+24 pp)
+- FN: 583 (-79%) | FP: 3.389 (-84%)
+
+**Demonstração visual:** O dashboard permite alternar entre V1 e V2 no mesmo threshold para demonstrar o ROI do enriquecimento de dados.
 
 ## 🔗 Integração com Backend
 
-O frontend se conecta automaticamente com a API em `http://127.0.0.1:8000/evaluate_threshold`
+O frontend se conecta automaticamente com a API multi-modelo em:
+- **Avaliação de threshold**: `http://127.0.0.1:8000/evaluate_threshold?threshold={value}&model_version={v1|v2}`
+- **Parâmetros dinâmicos**: Threshold e versão do modelo enviados a cada alteração
 
 Certifique-se de que o backend esteja rodando antes de usar o dashboard.
 
