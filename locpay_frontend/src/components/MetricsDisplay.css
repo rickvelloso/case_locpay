@@ -1,0 +1,93 @@
+.metrics-display {
+  margin-top: 2rem;
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.metrics-title {
+  grid-column: 1 / -1;
+  margin-bottom: 1.5rem;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.metric-card {
+  background-color: #333;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 2px solid #555;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.metric-card h3 {
+  margin-top: 0;
+  font-size: 1.3rem;
+}
+
+.metric-card p {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  min-height: 40px;
+}
+
+.metric-value {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin: 0.5rem 0;
+  color: #61DAFB;
+}
+
+.metric-card.error-prejuizo .metric-value {
+  color: #ff6b6b;
+}
+
+.metric-card.error-atrito .metric-value {
+  color: #feca57;
+}
+
+.metric-card span {
+  font-size: 0.8rem;
+  font-style: italic;
+  opacity: 0.7;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .metric-card {
+    padding: 1rem;
+  }
+
+  .metric-card h3 {
+    font-size: 1.15rem;
+  }
+
+  .metric-value {
+    font-size: 2.2rem;
+  }
+}
