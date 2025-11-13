@@ -20,6 +20,9 @@ class ContractFeatures(BaseModel):
     LoanTerm: int
     DTIRatio: float
     
+    # Feature Enriquecida (Bureau de Crédito gerada artificialmente para simular integração com API externa)
+    score_bureau: int
+    
     # Features Categóricas
     Education: str
     EmploymentType: str
@@ -41,6 +44,7 @@ class ContractFeatures(BaseModel):
                 "InterestRate": 12.5,
                 "LoanTerm": 36,
                 "DTIRatio": 0.25,
+                "score_bureau": 720,
                 "Education": "Bachelor's",
                 "EmploymentType": "Full-time",
                 "MaritalStatus": "Married",
