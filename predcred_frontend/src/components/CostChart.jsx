@@ -2,15 +2,15 @@ import { memo } from 'react';
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import './CostChart.css';
 
-const CostChart = memo(({ data, optimalThreshold }) => {
+const CostChart = memo(({ data, optimalThreshold, lossPerFN, profitPerFP }) => {
   if (!data || data.length === 0) return null;
 
-  // Formatar dados para o gráfico
+  // Formatar dados para o gráfico usando os valores reais dos inputs
   const chartData = data.map(point => ({
     threshold: point.threshold,
     'Custo Total': point.total_cost,
-    'Custo FN (Prejuízo)': point.fn_count * 5000, // Usando default
-    'Custo FP (Atrito)': point.fp_count * 800
+    'Custo FN (Prejuízo)': point.fn_count * lossPerFN,
+    'Custo FP (Atrito)': point.fp_count * profitPerFP
   }));
 
   const formatCurrency = (value) => {

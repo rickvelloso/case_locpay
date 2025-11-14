@@ -211,7 +211,12 @@ function App() {
       {optimization && (
         <>
           <OptimizationSummary optimization={optimization} />
-          <CostChart data={optimization.all_points} optimalThreshold={optimization.optimal_threshold} />
+          <CostChart 
+            data={optimization.all_points} 
+            optimalThreshold={optimization.optimal_threshold}
+            lossPerFN={lossPerFN}
+            profitPerFP={profitPerFP}
+          />
           <MetricsDisplay financials={financialMetrics} />
         </>
       )}
